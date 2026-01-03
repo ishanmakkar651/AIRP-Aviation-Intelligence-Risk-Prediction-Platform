@@ -123,7 +123,7 @@ AIRP/
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/yourusername/AIRP.git
+git clone (https://github.com/ishanmakkar651/AIRP-Aviation-Intelligence-Risk-Prediction-Platform.git)
 cd AIRP
 ```
 
