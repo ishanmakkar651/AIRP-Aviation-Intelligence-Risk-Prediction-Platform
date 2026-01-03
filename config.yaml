@@ -1,0 +1,100 @@
+# AIRP Configuration File
+# Aviation Intelligence & Risk Prediction Platform
+
+# Database Configuration
+database:
+  host: 127.0.0.1
+  port: 5434
+  name: aviation_db
+  user: airp_user
+  password: change_this_password_123
+  
+# Data Collection APIs
+apis:
+  # OpenSky Network (Free - No API key needed for basic access)
+  opensky:
+    base_url: https://opensky-network.org/api
+    rate_limit_seconds: 10  # Free tier: 1 request per 10 seconds
+    bbox:  # Bounding box for data collection (adjust for your region)
+      # Format: [min_lat, max_lat, min_lon, max_lon]
+      # Default: Indian subcontinent
+      india: [6.0, 37.0, 68.0, 97.5]
+      north_america: [24.0, 49.0, -125.0, -66.0]
+      europe: [36.0, 71.0, -10.0, 40.0]
+    active_region: india
+  
+  # Aviation Edge (Free tier: 1000 requests/month)
+  aviation_edge:
+    api_key: YOUR_AVIATION_EDGE_API_KEY  # Get from: https://aviation-edge.com/
+    base_url: https://aviation-edge.com/v2/public
+  
+  # AviationStack (Free tier: 500 requests/month - backup)
+  aviationstack:
+    api_key: YOUR_AVIATIONSTACK_API_KEY  # Get from: https://aviationstack.com/
+    base_url: http://api.aviationstack.com/v1
+  
+  # OpenWeatherMap (Free tier: 1000 requests/day)
+  openweather:
+    api_key: YOUR_OPENWEATHER_API_KEY  # Get from: https://openweathermap.org/api
+    base_url: https://api.openweathermap.org/data/2.5
+
+# Data Collection Schedule
+collection:
+  # How often to collect flight data (minutes)
+  flight_interval: 10
+  # How often to collect weather data (minutes)
+  weather_interval: 30
+  # Data retention (days)
+  retention_days: 90
+  # Enable/disable collectors
+  enabled:
+    opensky: true
+    aviation_edge: false  # Enable when you have API key
+    weather: false  # Enable when you have API key
+
+# Feature Engineering
+features:
+  # Delay threshold (minutes)
+  delay_threshold: 15
+  # Speed variance window (data points)
+  speed_window: 5
+  # Altitude variance window (data points)
+  altitude_window: 5
+
+# ML Models
+models:
+  delay_prediction:
+    algorithm: xgboost
+    train_test_split: 0.8
+    cv_folds: 5
+  
+  fuel_inefficiency:
+    algorithm: isolation_forest
+    contamination: 0.1
+  
+  risk_scoring:
+    weights:
+      speed_variance: 0.3
+      altitude_variance: 0.25
+      route_deviation: 0.25
+      congestion: 0.2
+
+# LLM Configuration
+llm:
+  provider: anthropic  # Using Claude
+  model: claude-sonnet-4-20250514
+  temperature: 0.0
+  max_tokens: 2000
+
+# Dashboard
+dashboard:
+  title: "Aviation Intelligence & Risk Prediction Platform"
+  port: 8501
+  theme: dark
+  refresh_interval: 60  # seconds
+
+# Logging
+logging:
+  level: INFO
+  file: logs/airp.log
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

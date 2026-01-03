@@ -1,0 +1,51 @@
+{
+  "trained_at": "2025-12-30T14:03:15.541583",
+  "n_samples": 5102,
+  "n_features": 17,
+  "feature_names": [
+    "fuel_efficiency_score",
+    "altitude_stability_score",
+    "speed_stability_score",
+    "route_directness_score",
+    "altitude_variance",
+    "velocity_variance",
+    "altitude_cv",
+    "speed_cv",
+    "avg_speed_kmh",
+    "max_altitude_ft",
+    "altitude_range_ft",
+    "speed_range_kmh",
+    "distance_per_minute",
+    "route_efficiency",
+    "airborne_ratio",
+    "duration_minutes",
+    "total_distance_km"
+  ],
+  "contamination": 0.1,
+  "n_anomalies": 511,
+  "patterns": {
+    "avg_efficiency_anomalous": 65.10895809919685,
+    "avg_efficiency_normal": 81.10394808291328,
+    "efficiency_difference": 15.994989983716422,
+    "avg_altitude_var_anomalous": 9095743.636967067,
+    "avg_altitude_var_normal": 8374418.062569763,
+    "avg_speed_var_anomalous": 7709.434979070585,
+    "avg_speed_var_normal": 3274.4102691224884,
+    "avg_route_eff_anomalous": 0.7855761108883441,
+    "avg_route_eff_normal": 0.9674486384436192,
+    "anomaly_by_category": {
+      "Good": 191,
+      "Fair": 108,
+      "Excellent": 95,
+      "Poor": 49
+    }
+  },
+  "cause_distribution": {
+    "Unknown Inefficiency": 149,
+    "Multiple Causes": 121,
+    "Poor Routing": 79,
+    "Holding Pattern": 71,
+    "Speed Instability": 54,
+    "Altitude Instability": 37
+  }
+}

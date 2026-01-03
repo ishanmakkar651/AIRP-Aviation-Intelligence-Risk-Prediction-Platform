@@ -1,0 +1,39 @@
+{
+  "trained_at": "2025-12-30T14:03:12.210092",
+  "n_samples": 5102,
+  "n_features": 17,
+  "feature_names": [
+    "altitude_variance",
+    "velocity_variance",
+    "altitude_cv",
+    "speed_cv",
+    "speed_range_kmh",
+    "altitude_range_ft",
+    "max_climb_rate_fpm",
+    "max_descent_rate_fpm",
+    "speed_zscore",
+    "altitude_zscore",
+    "fuel_efficiency_score",
+    "altitude_stability_score",
+    "speed_stability_score",
+    "duration_minutes",
+    "total_distance_km",
+    "avg_speed_kmh",
+    "max_altitude_ft"
+  ],
+  "risk_weights": {
+    "speed_anomaly": 0.25,
+    "altitude_anomaly": 0.25,
+    "high_speed_variability": 0.15,
+    "high_altitude_variability": 0.15,
+    "complex_maneuvers": 0.1,
+    "low_fuel_efficiency": 0.1
+  },
+  "contamination": 0.05,
+  "risk_distribution": {
+    "LOW": 4202,
+    "MEDIUM": 898,
+    "HIGH": 1,
+    "CRITICAL": 0
+  }
+}
