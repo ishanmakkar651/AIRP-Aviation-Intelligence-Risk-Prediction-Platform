@@ -40,8 +40,8 @@ class OperationalFeaturesExtractor:
             traj_df = pd.read_csv(traj_path)
             fuel_df = pd.read_csv(fuel_path)
             
-            # fuel_df already contains trajectory features, use it as base
-            df = fuel_df.copy()
+            # fuel_df already contains trajectory features, use it directly (avoid copy)
+            df = fuel_df
             
             # Verify callsign present
             if 'callsign' not in df.columns:
@@ -74,7 +74,7 @@ class OperationalFeaturesExtractor:
     
     def extract_temporal_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Extract time-based features
+        Extract time-based features (modifies DataFrame in place for better performance)
         
         Args:
             df: DataFrame with trajectory features
@@ -82,9 +82,7 @@ class OperationalFeaturesExtractor:
         Returns:
             DataFrame with added temporal features
         """
-        df = df.copy()
-        
-        # Convert timestamps
+        # Convert timestamps (in-place operation)
         df['start_time'] = pd.to_datetime(df['start_time'])
         df['end_time'] = pd.to_datetime(df['end_time'])
         
@@ -109,7 +107,7 @@ class OperationalFeaturesExtractor:
     
     def extract_performance_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Extract aircraft performance features
+        Extract aircraft performance features (modifies DataFrame in place for better performance)
         
         Args:
             df: DataFrame with trajectory features
@@ -117,8 +115,6 @@ class OperationalFeaturesExtractor:
         Returns:
             DataFrame with added performance features
         """
-        df = df.copy()
-        
         # Speed features (convert m/s to km/h for interpretability)
         df['avg_speed_kmh'] = df['avg_velocity_ms'] * 3.6
         df['max_speed_kmh'] = df['max_velocity_ms'] * 3.6

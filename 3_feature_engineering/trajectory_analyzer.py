@@ -149,6 +149,37 @@ class TrajectoryAnalyzer:
         
         return c * r
     
+    def calculate_distances_vectorized(self, lats: np.ndarray, lons: np.ndarray) -> np.ndarray:
+        """
+        Vectorized calculation of distances between consecutive points
+        
+        Args:
+            lats: Array of latitudes
+            lons: Array of longitudes
+        
+        Returns:
+            Array of distances in kilometers
+        """
+        # Convert to radians
+        lats_rad = np.radians(lats.astype(float))
+        lons_rad = np.radians(lons.astype(float))
+        
+        # Calculate differences between consecutive points
+        dlat = np.diff(lats_rad)
+        dlon = np.diff(lons_rad)
+        
+        # Vectorized Haversine formula
+        lat1 = lats_rad[:-1]
+        lat2 = lats_rad[1:]
+        
+        a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
+        c = 2 * np.arcsin(np.sqrt(a))
+        
+        # Earth radius in km
+        r = 6371
+        
+        return c * r
+    
     def extract_trajectory_features(self, trajectory_df: pd.DataFrame, trajectory_id: int) -> Dict:
         """
         Extract features from a single trajectory WITH CALLSIGN
@@ -174,8 +205,9 @@ class TrajectoryAnalyzer:
                 # Remove empty strings
                 callsigns = callsigns[callsigns.astype(str).str.strip() != '']
                 if len(callsigns) > 0:
-                    # Get most frequent callsign
-                    features['callsign'] = callsigns.mode()[0] if len(callsigns.mode()) > 0 else callsigns.iloc[0]
+                    # Get most frequent callsign (optimized to avoid calling mode() twice)
+                    mode_values = callsigns.mode()
+                    features['callsign'] = mode_values[0] if len(mode_values) > 0 else callsigns.iloc[0]
                 else:
                     features['callsign'] = None
             else:
@@ -196,18 +228,15 @@ class TrajectoryAnalyzer:
         features['end_lat'] = float(trajectory_df['latitude'].iloc[-1])
         features['end_lon'] = float(trajectory_df['longitude'].iloc[-1])
         
-        # Calculate total distance
-        distances = []
-        for i in range(len(trajectory_df) - 1):
-            dist = self.calculate_distance(
-                trajectory_df['latitude'].iloc[i],
-                trajectory_df['longitude'].iloc[i],
-                trajectory_df['latitude'].iloc[i+1],
-                trajectory_df['longitude'].iloc[i+1]
-            )
-            distances.append(dist)
+        # Calculate total distance using vectorized method (performance optimization)
+        if len(trajectory_df) > 1:
+            lats = trajectory_df['latitude'].values
+            lons = trajectory_df['longitude'].values
+            distances = self.calculate_distances_vectorized(lats, lons)
+            features['total_distance_km'] = np.sum(distances)
+        else:
+            features['total_distance_km'] = 0.0
         
-        features['total_distance_km'] = sum(distances)
         features['avg_speed_kmh'] = (features['total_distance_km'] / features['duration_minutes'] * 60) if features['duration_minutes'] > 0 else 0
         
         # Altitude features (filter out None values)

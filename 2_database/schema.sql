@@ -43,6 +43,7 @@ CREATE TABLE aircraft (
 
 CREATE INDEX idx_aircraft_icao24 ON aircraft(icao24);
 CREATE INDEX idx_aircraft_type ON aircraft(aircraft_type);
+CREATE INDEX idx_aircraft_updated ON aircraft(updated_at);
 
 -- Airports Table
 CREATE TABLE airports (
@@ -107,6 +108,11 @@ CREATE INDEX idx_flight_states_icao24 ON flight_states(icao24);
 CREATE INDEX idx_flight_states_timestamp ON flight_states(timestamp);
 CREATE INDEX idx_flight_states_callsign ON flight_states(callsign);
 CREATE INDEX idx_flight_states_airports ON flight_states(origin_airport, destination_airport);
+
+-- Composite indexes for common query patterns (performance optimization)
+CREATE INDEX idx_flight_states_icao_time ON flight_states(icao24, timestamp DESC);
+CREATE INDEX idx_flight_states_callsign_time ON flight_states(callsign, timestamp DESC);
+CREATE INDEX idx_flight_states_time_icao ON flight_states(timestamp DESC, icao24);
 
 -- Weather Data
 CREATE TABLE weather_data (

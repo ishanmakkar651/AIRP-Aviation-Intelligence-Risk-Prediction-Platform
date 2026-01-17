@@ -117,53 +117,67 @@ class RealTimeFlightStreamer:
         return df
     
     def calculate_real_time_risk(self, df):
-        """Calculate real-time risk scores for active flights"""
+        """Calculate real-time risk scores for active flights using vectorized operations"""
         print(f"\n📊 Calculating real-time risk scores...")
         
         if len(df) == 0:
             return df
         
-        # Initialize risk score
+        # Initialize risk score and factors columns
         df['risk_score'] = 0.0
         df['risk_factors'] = ''
         
-        for idx, flight in df.iterrows():
-            risk_score = 0
-            risk_factors = []
-            
-            # Altitude anomalies
-            altitude = flight['baro_altitude']
-            if altitude < self.risk_thresholds['altitude_min'] and altitude > 0:
-                risk_score += 30
-                risk_factors.append('Very Low Altitude')
-            elif altitude > self.risk_thresholds['altitude_max']:
-                risk_score += 20
-                risk_factors.append('Very High Altitude')
-            
-            # Speed anomalies
-            speed = flight['velocity']
-            if speed < self.risk_thresholds['speed_min'] and speed > 0:
-                risk_score += 25
-                risk_factors.append('Very Low Speed')
-            elif speed > self.risk_thresholds['speed_max']:
-                risk_score += 20
-                risk_factors.append('Very High Speed')
-            
-            # Vertical rate anomalies
-            vert_rate = abs(flight['vertical_rate']) if pd.notna(flight['vertical_rate']) else 0
-            if vert_rate > self.risk_thresholds['vertical_rate_max']:
-                risk_score += 15
-                risk_factors.append('Rapid Altitude Change')
-            
-            # Missing data penalty
-            if pd.isna(flight['baro_altitude']) or flight['baro_altitude'] == 0:
-                risk_score += 10
-                risk_factors.append('Missing Altitude Data')
-            
-            df.at[idx, 'risk_score'] = min(risk_score, 100)  # Cap at 100
-            df.at[idx, 'risk_factors'] = ', '.join(risk_factors) if risk_factors else 'Normal'
+        # Vectorized altitude risk calculation
+        altitude = df['baro_altitude'].fillna(0)
+        low_altitude_mask = (altitude < self.risk_thresholds['altitude_min']) & (altitude > 0)
+        high_altitude_mask = altitude > self.risk_thresholds['altitude_max']
         
-        # Classify risk level
+        df.loc[low_altitude_mask, 'risk_score'] += 30
+        df.loc[high_altitude_mask, 'risk_score'] += 20
+        
+        # Vectorized speed risk calculation
+        speed = df['velocity'].fillna(0)
+        low_speed_mask = (speed < self.risk_thresholds['speed_min']) & (speed > 0)
+        high_speed_mask = speed > self.risk_thresholds['speed_max']
+        
+        df.loc[low_speed_mask, 'risk_score'] += 25
+        df.loc[high_speed_mask, 'risk_score'] += 20
+        
+        # Vectorized vertical rate risk calculation
+        vert_rate = df['vertical_rate'].fillna(0).abs()
+        rapid_change_mask = vert_rate > self.risk_thresholds['vertical_rate_max']
+        
+        df.loc[rapid_change_mask, 'risk_score'] += 15
+        
+        # Missing data penalty
+        missing_altitude_mask = df['baro_altitude'].isna() | (df['baro_altitude'] == 0)
+        df.loc[missing_altitude_mask, 'risk_score'] += 10
+        
+        # Build risk factors strings efficiently
+        risk_factors_list = []
+        for idx in df.index:
+            factors = []
+            if low_altitude_mask[idx]:
+                factors.append('Very Low Altitude')
+            if high_altitude_mask[idx]:
+                factors.append('Very High Altitude')
+            if low_speed_mask[idx]:
+                factors.append('Very Low Speed')
+            if high_speed_mask[idx]:
+                factors.append('Very High Speed')
+            if rapid_change_mask[idx]:
+                factors.append('Rapid Altitude Change')
+            if missing_altitude_mask[idx]:
+                factors.append('Missing Altitude Data')
+            
+            risk_factors_list.append(', '.join(factors) if factors else 'Normal')
+        
+        df['risk_factors'] = risk_factors_list
+        
+        # Cap risk score at 100
+        df['risk_score'] = df['risk_score'].clip(upper=100)
+        
+        # Classify risk level using vectorized apply
         df['risk_level'] = df['risk_score'].apply(self._classify_risk)
         
         # Count by risk level

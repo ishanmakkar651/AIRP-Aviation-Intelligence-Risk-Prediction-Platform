@@ -4,7 +4,7 @@ Aviation Intelligence & Risk Prediction Platform (AIRP)
 """
 
 import psycopg2
-from psycopg2 import sql, extras
+from psycopg2 import sql, extras, pool
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import yaml
 import os
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class DatabaseManager:
-    """Manages database connections and operations"""
+    """Manages database connections and operations with connection pooling"""
     
     def __init__(self, config_path: str = "config.yaml"):
         """Initialize database manager with config"""
@@ -30,6 +30,7 @@ class DatabaseManager:
         self.db_config = self.config['database']
         self.conn = None
         self.cursor = None
+        self.pool = None
     
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from YAML file"""
@@ -82,18 +83,60 @@ class DatabaseManager:
             logger.error(f"Error creating database: {e}")
             raise
     
-    def connect(self) -> psycopg2.extensions.connection:
-        """Establish database connection"""
+    def init_pool(self, minconn: int = 1, maxconn: int = 10) -> None:
+        """Initialize connection pool for better performance"""
         try:
-            self.conn = psycopg2.connect(
-                host=self.db_config['host'],
-                port=self.db_config['port'],
-                database=self.db_config['name'],
-                user=self.db_config['user'],
-                password=self.db_config['password']
-            )
-            self.cursor = self.conn.cursor(cursor_factory=extras.RealDictCursor)
-            logger.info("Database connection established")
+            if self.pool is None:
+                self.pool = psycopg2.pool.SimpleConnectionPool(
+                    minconn,
+                    maxconn,
+                    host=self.db_config['host'],
+                    port=self.db_config['port'],
+                    database=self.db_config['name'],
+                    user=self.db_config['user'],
+                    password=self.db_config['password']
+                )
+                logger.info(f"Database connection pool initialized (min={minconn}, max={maxconn})")
+        except Exception as e:
+            logger.error(f"Error initializing connection pool: {e}")
+            raise
+    
+    def get_conn(self) -> psycopg2.extensions.connection:
+        """Get a connection from the pool, or create a new one if pool not initialized"""
+        try:
+            if self.pool:
+                return self.pool.getconn()
+            else:
+                # Fallback to direct connection if pool not initialized
+                return psycopg2.connect(
+                    host=self.db_config['host'],
+                    port=self.db_config['port'],
+                    database=self.db_config['name'],
+                    user=self.db_config['user'],
+                    password=self.db_config['password']
+                )
+        except Exception as e:
+            logger.error(f"Error getting connection: {e}")
+            raise
+    
+    def put_conn(self, conn: psycopg2.extensions.connection) -> None:
+        """Return a connection to the pool"""
+        if self.pool and conn:
+            self.pool.putconn(conn)
+    
+    def connect(self) -> psycopg2.extensions.connection:
+        """Establish database connection (legacy method for backward compatibility)"""
+        try:
+            if not self.conn or self.conn.closed:
+                self.conn = psycopg2.connect(
+                    host=self.db_config['host'],
+                    port=self.db_config['port'],
+                    database=self.db_config['name'],
+                    user=self.db_config['user'],
+                    password=self.db_config['password']
+                )
+                self.cursor = self.conn.cursor(cursor_factory=extras.RealDictCursor)
+                logger.info("Database connection established")
             return self.conn
         except Exception as e:
             logger.error(f"Error connecting to database: {e}")
@@ -124,11 +167,14 @@ class DatabaseManager:
             raise
     
     def close(self):
-        """Close database connection"""
+        """Close database connection and pool"""
         if self.cursor:
             self.cursor.close()
         if self.conn:
             self.conn.close()
+        if self.pool:
+            self.pool.closeall()
+            logger.info("Database connection pool closed")
         logger.info("Database connection closed")
     
     def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Dict]:
