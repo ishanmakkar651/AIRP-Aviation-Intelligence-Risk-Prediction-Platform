@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Perfect Dark Theme CSS
+# Enhanced Dark Theme CSS with Performance Badge
 st.markdown("""
 <style>
     /* Remove white background from sidebar */
@@ -30,7 +30,7 @@ st.markdown("""
         background-color: #0e1117;
     }
     
-    /* Header styling */
+    /* Header styling with gradient animation */
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
@@ -41,32 +41,58 @@ st.markdown("""
         background: linear-gradient(135deg, #1a237e 0%, #0d47a1 50%, #01579b 100%);
         border-radius: 15px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        animation: pulse 3s ease-in-out infinite;
     }
     
-    /* Subtitle */
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); }
+        50% { box-shadow: 0 6px 12px rgba(88, 166, 255, 0.4); }
+    }
+    
+    /* Performance Badge */
+    .perf-badge {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(35, 134, 54, 0.5);
+    }
+    
+    /* Subtitle with glow effect */
     .subtitle {
         text-align: center;
         color: #8b949e;
         font-size: 1.1rem;
         margin-bottom: 2rem;
+        text-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
     }
     
-    /* Metric styling */
+    /* Enhanced Metric styling */
     [data-testid="stMetricValue"] {
         font-size: 2rem;
         font-weight: bold;
         color: #58a6ff;
+        text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
     }
     
     [data-testid="stMetricLabel"] {
         font-size: 1rem;
         color: #8b949e;
+        font-weight: 600;
     }
     
-    /* Section headers */
+    /* Section headers with underline */
     h1, h2, h3 {
         color: #58a6ff !important;
         padding-top: 1rem;
+        border-bottom: 2px solid #30363d;
+        padding-bottom: 0.5rem;
     }
     
     /* Sidebar text */
@@ -74,11 +100,12 @@ st.markdown("""
         background-color: #1e1e1e;
     }
     
-    /* Info boxes */
+    /* Enhanced Info boxes */
     .stAlert {
         background-color: #161b22;
         border: 1px solid #30363d;
         border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     
     /* Remove padding */
@@ -87,26 +114,59 @@ st.markdown("""
         padding-bottom: 2rem;
     }
     
-    /* DataFrame styling */
+    /* Enhanced DataFrame styling */
     [data-testid="stDataFrame"] {
         border: 1px solid #30363d;
         border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
     
-    /* Buttons */
+    /* Enhanced Buttons */
     .stButton>button {
-        background-color: #238636;
+        background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
         color: white;
         border-radius: 6px;
         border: none;
         padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
+        font-weight: 600;
     }
     
     .stButton>button:hover {
-        background-color: #2ea043;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(46, 160, 67, 0.5);
+    }
+    
+    /* Card styling for metrics */
+    div[data-testid="stMetric"] {
+        background-color: #161b22;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #30363d;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background-color: #161b22;
+        border-radius: 8px 8px 0 0;
+        padding: 10px 20px;
+        color: #8b949e;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #238636;
+        color: white;
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Performance Badge
+st.markdown('<div class="perf-badge">⚡ Optimized</div>', unsafe_allow_html=True)
 
 # Load data with error handling
 @st.cache_data
