@@ -1,0 +1,69 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "🎨 Dashboard",
+            "type": "python",
+            "request": "launch",
+            "module": "streamlit",
+            "args": [
+                "run",
+                "${workspaceFolder}/6_dashboard/app.py",
+                "--server.port=8501"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "📊 Feature Engineering",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/3_feature_engineering/run_pipeline.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🤖 Train Models",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/4_models/train_all_models.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "📡 Data Collection",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/1_data_ingestion/opensky_collector.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "🗄️ Database Setup",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/2_database/db_setup.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "✅ Validate Optimizations",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/validate_optimizations.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "📄 Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

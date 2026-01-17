@@ -69,6 +69,18 @@ if exist "config.yaml" (
 )
 echo.
 
+REM Setup VS Code configuration
+echo 💻 Setting up VS Code configuration...
+if exist ".vscode.example" (
+    if not exist ".vscode" (
+        xcopy /E /I /Q .vscode.example .vscode >nul
+        echo ✅ VS Code configuration created
+    ) else (
+        echo ⚠️  .vscode directory already exists (skipping)
+    )
+)
+echo.
+
 REM Summary
 echo ========================================
 echo ✅ Setup Complete!

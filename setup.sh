@@ -66,6 +66,18 @@ else
     fi
 fi
 
+# Setup VS Code configuration
+echo ""
+echo "💻 Setting up VS Code configuration..."
+if [ -d ".vscode.example" ]; then
+    if [ ! -d ".vscode" ]; then
+        cp -r .vscode.example .vscode
+        echo "✅ VS Code configuration created"
+    else
+        echo "⚠️  .vscode directory already exists (skipping)"
+    fi
+fi
+
 # Summary
 echo ""
 echo "========================"
