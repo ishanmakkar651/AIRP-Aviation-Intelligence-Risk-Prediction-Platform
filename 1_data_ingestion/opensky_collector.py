@@ -162,9 +162,54 @@ class OpenSkyCollector:
         
         return parsed_states
     
+    def save_aircraft_batch(self, icao24_list: List[str], callsign_list: List[Optional[str]]) -> bool:
+        """
+        Batch save or update aircraft information (performance optimization)
+        
+        Args:
+            icao24_list: List of ICAO24 aircraft identifiers
+            callsign_list: List of flight callsigns (optional)
+        
+        Returns:
+            True if successful
+        """
+        try:
+            if not icao24_list:
+                return True
+            
+            # Get existing aircraft in batch
+            placeholders = ','.join(['%s'] * len(icao24_list))
+            query = f"SELECT icao24 FROM aircraft WHERE icao24 IN ({placeholders})"
+            existing = self.db.execute_query(query, tuple(icao24_list))
+            existing_icao24s = {row['icao24'] for row in existing}
+            
+            # Prepare batch insert for new aircraft
+            new_aircraft = []
+            for icao24, callsign in zip(icao24_list, callsign_list):
+                if icao24 not in existing_icao24s:
+                    # Extract operator from callsign (first 3 chars typically airline code)
+                    operator = callsign[:3] if callsign and len(callsign) >= 3 else None
+                    new_aircraft.append((icao24, None, operator))
+            
+            # Batch insert new aircraft
+            if new_aircraft:
+                insert_query = """
+                INSERT INTO aircraft (icao24, registration, operator)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (icao24) DO NOTHING
+                """
+                self.db.execute_batch_insert(insert_query, new_aircraft)
+                logger.info(f"Batch inserted {len(new_aircraft)} new aircraft")
+            
+            return True
+        
+        except Exception as e:
+            logger.error(f"Error batch saving aircraft: {e}")
+            return False
+    
     def save_aircraft(self, icao24: str, callsign: Optional[str] = None) -> bool:
         """
-        Save or update aircraft information
+        Save or update aircraft information (legacy method, prefer save_aircraft_batch)
         
         Args:
             icao24: ICAO24 aircraft identifier
@@ -200,7 +245,7 @@ class OpenSkyCollector:
     
     def save_states(self, states: List[Dict]) -> int:
         """
-        Batch save flight states to database
+        Batch save flight states to database (optimized with batch aircraft lookups)
         
         Args:
             states: List of parsed flight state dictionaries
@@ -212,13 +257,15 @@ class OpenSkyCollector:
             return 0
         
         try:
+            # Batch process aircraft (performance optimization)
+            icao24_list = [state['icao24'] for state in states]
+            callsign_list = [state['callsign'] for state in states]
+            self.save_aircraft_batch(icao24_list, callsign_list)
+            
             # Prepare batch insert data
             batch_data = []
             
             for state in states:
-                # Ensure aircraft exists
-                self.save_aircraft(state['icao24'], state['callsign'])
-                
                 # Prepare state data for insertion
                 state_tuple = (
                     state['icao24'],

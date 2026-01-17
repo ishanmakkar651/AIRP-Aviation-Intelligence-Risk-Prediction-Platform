@@ -10,15 +10,21 @@ from datetime import datetime, timezone
 import time
 from pathlib import Path
 import json
+import glob
 
 class RealTimeFlightStreamer:
     """Streams and processes real-time flight data"""
     
-    def __init__(self):
-        """Initialize streamer"""
+    def __init__(self, max_snapshots: int = 100):
+        """Initialize streamer with file rotation support
+        
+        Args:
+            max_snapshots: Maximum number of historical snapshots to keep
+        """
         self.api_url = "https://opensky-network.org/api/states/all"
         self.data_dir = Path('data/realtime')
         self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.max_snapshots = max_snapshots
         
         # Define region of interest (optional - can be global)
         # India region as example
@@ -200,8 +206,23 @@ class RealTimeFlightStreamer:
         else:
             return 'LOW'
     
+    def rotate_snapshots(self):
+        """Remove old snapshot files to prevent disk space issues (performance optimization)"""
+        try:
+            # Get all snapshot files
+            snapshot_files = sorted(glob.glob(str(self.data_dir / 'snapshot_*.csv')))
+            
+            # Remove oldest files if exceeding max
+            if len(snapshot_files) > self.max_snapshots:
+                files_to_remove = snapshot_files[:-self.max_snapshots]
+                for file_path in files_to_remove:
+                    Path(file_path).unlink()
+                print(f"   🗑️  Removed {len(files_to_remove)} old snapshot(s)")
+        except Exception as e:
+            print(f"   ⚠️  Error rotating snapshots: {e}")
+    
     def save_snapshot(self, df):
-        """Save current snapshot to file"""
+        """Save current snapshot to file with automatic rotation"""
         timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
         
         # Save latest snapshot
@@ -213,6 +234,9 @@ class RealTimeFlightStreamer:
         df.to_csv(snapshot_path, index=False)
         
         print(f"\n💾 Snapshot saved: {latest_path}")
+        
+        # Rotate old snapshots to free up disk space
+        self.rotate_snapshots()
         
         # Also save as JSON for web display
         json_path = self.data_dir / 'latest_snapshot.json'
