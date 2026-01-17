@@ -29,7 +29,7 @@ def check_method_exists(filepath, class_name, method_name):
                     if isinstance(item, ast.FunctionDef) and item.name == method_name:
                         return True
         return False
-    except Exception as e:
+    except (FileNotFoundError, SyntaxError, IOError) as e:
         print(f"  ⚠️  Error checking {filepath}: {e}")
         return False
 
@@ -95,6 +95,7 @@ def main():
     print("\n📊 Checking Database Schema...")
     schema_path = Path('2_database/schema.sql')
     if schema_path.exists():
+        # Read schema file once for efficiency
         with open(schema_path, 'r') as f:
             schema = f.read()
         

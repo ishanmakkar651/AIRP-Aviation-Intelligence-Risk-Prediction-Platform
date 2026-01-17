@@ -215,9 +215,15 @@ class RealTimeFlightStreamer:
             # Remove oldest files if exceeding max
             if len(snapshot_files) > self.max_snapshots:
                 files_to_remove = snapshot_files[:-self.max_snapshots]
+                removed_count = 0
                 for file_path in files_to_remove:
-                    Path(file_path).unlink()
-                print(f"   🗑️  Removed {len(files_to_remove)} old snapshot(s)")
+                    try:
+                        Path(file_path).unlink()
+                        removed_count += 1
+                    except (OSError, PermissionError) as e:
+                        print(f"   ⚠️  Failed to remove {file_path}: {e}")
+                if removed_count > 0:
+                    print(f"   🗑️  Removed {removed_count} old snapshot(s)")
         except Exception as e:
             print(f"   ⚠️  Error rotating snapshots: {e}")
     

@@ -196,7 +196,9 @@ class OpenSkyCollector:
                 insert_query = """
                 INSERT INTO aircraft (icao24, registration, operator)
                 VALUES (%s, %s, %s)
-                ON CONFLICT (icao24) DO NOTHING
+                ON CONFLICT (icao24) DO UPDATE 
+                SET operator = EXCLUDED.operator
+                WHERE EXCLUDED.operator IS NOT NULL
                 """
                 self.db.execute_batch_insert(insert_query, new_aircraft)
                 logger.info(f"Batch inserted {len(new_aircraft)} new aircraft")
